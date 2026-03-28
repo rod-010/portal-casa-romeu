@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal de Compras — Casa Romeu</title>
+  <style>
+    :root {
+      --azul:     #12273A;
+      --azul2:    #1a3550;
+      --ambar:    #CD7B1E;
+      --ambar2:   #A74F00;
+      --cinza:    #F2F2F2;
+      --bg:       #f0eeea;
+      --branco:   #ffffff;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: var(--bg);
+      color: #333;
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      background: var(--azul);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+    }
+    .logo-r {
+      color: var(--ambar);
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      line-height: 1;
+    }
+    .logo-text { display: flex; flex-direction: column; }
+    .logo-name {
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      line-height: 1.2;
+    }
+    .logo-since {
+      color: var(--ambar);
+      font-size: 9px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+    .header-updated {
+      margin-left: auto;
+      color: rgba(255,255,255,0.38);
+      font-size: 11px;
+    }
+
+    /* ── TABS ── */
+    .tabs {
+      display: flex;
+      background: var(--azul);
+      padding: 0 24px;
+      border-top: 1px solid rgba(255,255,255,0.07);
+    }
+    .tab {
+      padding: 11px 22px;
+      font-size: 13px;
+      color: rgba(255,255,255,0.45);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+      user-select: none;
+      letter-spacing: 0.02em;
+    }
+    .tab:hover { color: rgba(255,255,255,0.75); }
+    .tab.active {
+      color: var(--ambar);
+      border-bottom-color: var(--ambar);
+      font-weight: 600;
+    }
+
+    /* ── CONTENT ── */
+    .content { padding: 20px 24px; max-width: 1100px; }
+
+    .pane { display: none; }
+    .pane.active { display: block; }
+
+    /* ── LOADING ── */
+    .loading {
+      text-align: center;
+      padding: 48px;
+      color: #aaa;
+      font-size: 13px;
+    }
+    .spinner {
+      display: inline-block;
+      width: 20px; height: 20px;
+      border: 2px solid #ddd;
+      border-top-color: var(--ambar);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin-bottom: 10px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── FILTERS ── */
+    .filters {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .filters select {
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-size: 13px;
+      background: var(--branco);
+      color: #333;
+      outline: none;
+      flex: 1;
+      min-width: 150px;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .filters select:focus { border-color: var(--ambar); }
+    .filters select:disabled { background: #f5f5f3; color: #bbb; cursor: default; }
+    .btn-clear {
+      background: none;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 8px 16px;
+      font-size: 12px;
+      color: #888;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+    .btn-clear:hover { border-color: var(--ambar); color: var(--ambar); }
+
+    /* ── TABLE ── */
+    .table-wrap {
+      background: var(--branco);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead tr { background: var(--azul); color: #fff; }
+    thead th {
+      padding: 11px 16px;
+      text-align: left;
+      font-weight: 500;
+      font-size: 11px;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+    }
+    tbody tr { border-bottom: 1px solid #f0efed; transition: background 0.12s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: #fdf7ee; }
+    tbody tr.hidden { display: none; }
+    tbody td { padding: 11px 16px; vertical-align: middle; }
+
+    .qty { font-weight: 600; color: var(--azul); }
+    .urgente-dot {
+      display: inline-block;
+      width: 7px; height: 7px;
+      background: #e74c3c;
+      border-radius: 50%;
+      margin-right: 5px;
+      vertical-align: middle;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+    .badge-aguardando { background: #eef2f7; color: #5a7a9a; }
+    .badge-em-aberto  { background: #fef3e2; color: #9a6010; }
+    .badge-entregue   { background: #eaf5ee; color: #2e7a4a; }
+
+    .empty-msg {
+      text-align: center;
+      padding: 40px;
+      color: #bbb;
+      font-size: 13px;
+    }
+    .error-msg {
+      background: #fff5f5;
+      border: 1px solid #fcc;
+      border-radius: 8px;
+      padding: 16px 20px;
+      color: #c0392b;
+      font-size: 13px;
+      margin-bottom: 16px;
+    }
+
+    /* ── FORM ── */
+    .form-wrap {
+      max-width: 480px;
+    }
+    .form-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--azul);
+      margin-bottom: 4px;
+    }
+    .form-desc {
+      font-size: 13px;
+      color: #999;
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+    .form-group { margin-bottom: 18px; }
+    .form-group label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      color: #777;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 6px;
+    }
+    .form-group select,
+    .form-group input {
+      width: 100%;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-size: 14px;
+      background: var(--branco);
+      color: #333;
+      outline: none;
+      transition: border-color 0.2s;
+      font-family: inherit;
+    }
+    .form-group select:focus,
+    .form-group input:focus { border-color: var(--ambar); }
+    .form-group select.invalid,
+    .form-group input.invalid { border-color: #e74c3c; }
+
+    .urgente-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      user-select: none;
+      width: fit-content;
+    }
+    .urgente-label input[type=checkbox] {
+      width: 16px; height: 16px;
+      accent-color: #e74c3c;
+      cursor: pointer;
+      margin: 0; flex-shrink: 0;
+    }
+    .urgente-label span {
+      font-size: 13px;
+      font-weight: 700;
+      color: #c0392b;
+      letter-spacing: 0.08em;
+    }
+
+    .btn-submit {
+      background: var(--azul);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 11px 32px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+      margin-top: 20px;
+      font-family: inherit;
+    }
+    .btn-submit:hover { background: var(--ambar2); }
+    .btn-submit:disabled { background: #aaa; cursor: default; }
+
+    .success-msg {
+      display: none;
+      background: #eaf5ee;
+      border: 1px solid #b2dfc0;
+      border-radius: 8px;
+      padding: 14px 18px;
+      color: #2d7a4a;
+      font-size: 14px;
+      margin-top: 16px;
+    }
+
+    @media (max-width: 600px) {
+      .content { padding: 14px 14px; }
+      .header { padding: 10px 14px; }
+      .tabs { padding: 0 14px; }
+      .filters { flex-direction: column; }
+      .filters select { min-width: 100%; }
+      thead th:nth-child(1),
+      tbody td:nth-child(1) { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo-r">R.</div>
+  <div class="logo-text">
+    <span class="logo-name">Casa Romeu</span>
+    <span class="logo-since">Desde 1948</span>
+  </div>
+  <div class="header-updated" id="ultima-atualizacao">Carregando...</div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('pedidos', this)">Pedidos em Aberto</div>
+  <div class="tab" onclick="switchTab('sugestoes', this)">Sugerir Compra</div>
+</div>
+
+<div class="content">
+
+  <!-- ── ABA PEDIDOS ── -->
+  <div class="pane active" id="pane-pedidos">
+    <div id="loading-pedidos" class="loading">
+      <div class="spinner"></div><br>Carregando pedidos...
+    </div>
+    <div id="erro-pedidos" class="error-msg" style="display:none">
+      Não foi possível carregar os dados. Verifique se a planilha está compartilhada como pública.
+    </div>
+    <div id="tabela-wrap" style="display:none">
+      <div class="filters">
+        <select id="sel-artigo" onchange="onArtigoChange()">
+          <option value="">Todos os artigos</option>
+        </select>
+        <select id="sel-cor" onchange="aplicarFiltros()" disabled>
+          <option value="">Todas as cores</option>
+        </select>
+        <select id="sel-status" onchange="aplicarFiltros()">
+          <option value="">Todos os status</option>
+          <option>Aguardando</option>
+          <option>Em Aberto</option>
+          <option>Entregue</option>
+        </select>
+        <button class="btn-clear" onclick="limparFiltros()">Limpar filtros</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Qtde</th>
+              <th>Artigo</th>
+              <th>Cor</th>
+              <th>Prioridade</th>
+              <th>Status</th>
+              <th>Previsão de Entrega</th>
+            </tr>
+          </thead>
+          <tbody id="tabela-body"></tbody>
+        </table>
+        <div id="empty-msg" class="empty-msg" style="display:none">
+          Nenhum pedido encontrado com esses filtros.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ABA SUGESTÕES ── -->
+  <div class="pane" id="pane-sugestoes">
+    <div class="form-wrap">
+      <div class="form-title">Sugerir compra</div>
+      <div class="form-desc">Indique um artigo e cor que você acredita que devemos comprar. Cada sugestão deve ser enviada separadamente.</div>
+
+      <div class="form-group">
+        <label>Seu nome</label>
+        <select id="f-vendedor">
+          <option value="">Carregando...</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Artigo</label>
+        <input type="text" id="f-artigo" placeholder="Ex: Camurça de Porco">
+      </div>
+
+      <div class="form-group">
+        <label>Cor</label>
+        <input type="text" id="f-cor" placeholder="Ex: 103 Macadâmia">
+      </div>
+
+      <label class="urgente-label">
+        <input type="checkbox" id="f-urgente">
+        <span>URGENTE</span>
+      </label>
+
+      <button class="btn-submit" id="btn-enviar" onclick="enviarSugestao()">Enviar sugestão</button>
+      <div class="success-msg" id="success-msg">✓ Sugestão enviada com sucesso!</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // ── CONFIGURAÇÃO ──
+  var SHEET_ID  = '1UO3KXOKPR1keIjXCh9fyf6MQ9xhsq4sEZCxznAhgjLM';
+  var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxVx07wX2Zzbh7MN5p99DmVFDdBdjI3fwGP43h_MnHLvE0WDK5BMKo-TJnAyxrTIsVEIg/exec';
+
+  var ABA_PEDIDOS   = 'Pedidos';
+  var ABA_VENDEDORES = 'Vendedores';
+
+  // URL base para leitura pública do Sheets
+  function sheetURL(aba) {
+    return 'https://docs.google.com/spreadsheets/d/' + SHEET_ID +
+           '/gviz/tq?tqx=out:json&sheet=' + encodeURIComponent(aba);
+  }
+
+  // Parseia o JSON embrulhado que o Sheets retorna
+  function parseSheetJSON(raw) {
+    var json = raw.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/);
+    return JSON.parse(json[1]);
+  }
+
+  // ── PEDIDOS ──
+  var todosRows = [];
+
+  function carregarPedidos() {
+    fetch(sheetURL(ABA_PEDIDOS))
+      .then(function(r) { return r.text(); })
+      .then(function(raw) {
+        var data = parseSheetJSON(raw);
+        var rows = data.table.rows;
+        var cols = data.table.cols;
+
+        // Mapear colunas pelo cabeçalho
+        var idx = {};
+        cols.forEach(function(c, i) {
+          if (c.label) idx[c.label.trim()] = i;
+        });
+
+        todosRows = [];
+        rows.forEach(function(r) {
+          if (!r.c) return;
+          function val(col) {
+            var i = idx[col];
+            if (i === undefined || !r.c[i]) return '';
+            return r.c[i].f || r.c[i].v || '';
+          }
+          var artigo   = String(val('Nome')).trim();
+          var cor      = String(val('Cor')).trim();
+          var qtde     = String(val('Quantidade')).trim();
+          var status   = String(val('Status')).trim();
+          var prior    = String(val('Prioridade')).trim();
+          var entrega  = String(val('Previsão de Entrega')).trim();
+          if (!artigo && !cor) return;
+          todosRows.push({ artigo, cor, qtde, status, prior, entrega });
+        });
+
+        // Data de atualização
+        document.getElementById('ultima-atualizacao').textContent =
+          'Atualizado em ' + new Date().toLocaleDateString('pt-BR');
+
+        renderizarFiltros();
+        renderizarTabela(todosRows);
+        document.getElementById('loading-pedidos').style.display = 'none';
+        document.getElementById('tabela-wrap').style.display = 'block';
+      })
+      .catch(function() {
+        document.getElementById('loading-pedidos').style.display = 'none';
+        document.getElementById('erro-pedidos').style.display = 'block';
+      });
+  }
+
+  function renderizarFiltros() {
+    var artigos = [...new Set(todosRows.map(function(r) { return r.artigo; }))].sort();
+    var sel = document.getElementById('sel-artigo');
+    sel.innerHTML = '<option value="">Todos os artigos</option>';
+    artigos.forEach(function(a) {
+      var o = document.createElement('option');
+      o.value = a; o.textContent = a;
+      sel.appendChild(o);
+    });
+  }
+
+  function renderizarTabela(dados) {
+    var tbody = document.getElementById('tabela-body');
+    tbody.innerHTML = '';
+    dados.forEach(function(r) {
+      var tr = document.createElement('tr');
+      tr.dataset.artigo = r.artigo;
+      tr.dataset.cor    = r.cor;
+      tr.dataset.status = r.status;
+
+      var urgente = r.prior && r.prior.toString().toLowerCase().includes('urgent');
+      var priorHTML = urgente
+        ? '<span class="urgente-dot"></span>Urgente'
+        : '—';
+
+      var badgeClass = 'badge-aguardando';
+      var s = r.status.toLowerCase();
+      if (s.includes('aberto')) badgeClass = 'badge-em-aberto';
+      else if (s.includes('entreg')) badgeClass = 'badge-entregue';
+
+      tr.innerHTML =
+        '<td class="qty">' + (r.qtde || '—') + '</td>' +
+        '<td>' + r.artigo + '</td>' +
+        '<td>' + r.cor + '</td>' +
+        '<td>' + priorHTML + '</td>' +
+        '<td><span class="badge ' + badgeClass + '">' + (r.status || '—') + '</span></td>' +
+        '<td>' + (r.entrega || '—') + '</td>';
+
+      tbody.appendChild(tr);
+    });
+    aplicarFiltros();
+  }
+
+  function onArtigoChange() {
+    var artigo = document.getElementById('sel-artigo').value;
+    var selCor = document.getElementById('sel-cor');
+    selCor.innerHTML = '<option value="">Todas as cores</option>';
+    if (artigo) {
+      var cores = [...new Set(
+        todosRows.filter(function(r) { return r.artigo === artigo; })
+                 .map(function(r) { return r.cor; })
+      )].sort();
+      cores.forEach(function(c) {
+        var o = document.createElement('option'); o.value = c; o.textContent = c;
+        selCor.appendChild(o);
+      });
+      selCor.disabled = false;
+    } else {
+      selCor.disabled = true;
+    }
+    aplicarFiltros();
+  }
+
+  function aplicarFiltros() {
+    var artigo = document.getElementById('sel-artigo').value;
+    var cor    = document.getElementById('sel-cor').value;
+    var status = document.getElementById('sel-status').value;
+    var rows   = document.querySelectorAll('#tabela-body tr');
+    var vis = 0;
+    rows.forEach(function(tr) {
+      var ok = true;
+      if (artigo && tr.dataset.artigo !== artigo) ok = false;
+      if (cor    && tr.dataset.cor    !== cor)    ok = false;
+      if (status && tr.dataset.status !== status) ok = false;
+      tr.classList.toggle('hidden', !ok);
+      if (ok) vis++;
+    });
+    document.getElementById('empty-msg').style.display = vis === 0 ? 'block' : 'none';
+  }
+
+  function limparFiltros() {
+    document.getElementById('sel-artigo').value = '';
+    document.getElementById('sel-cor').innerHTML = '<option value="">Todas as cores</option>';
+    document.getElementById('sel-cor').disabled = true;
+    document.getElementById('sel-status').value = '';
+    aplicarFiltros();
+  }
+
+  // ── VENDEDORES ──
+  function carregarVendedores() {
+    fetch(sheetURL(ABA_VENDEDORES))
+      .then(function(r) { return r.text(); })
+      .then(function(raw) {
+        var data = parseSheetJSON(raw);
+        var rows = data.table.rows;
+        var sel = document.getElementById('f-vendedor');
+        sel.innerHTML = '<option value="">Selecionar vendedor...</option>';
+        rows.forEach(function(r) {
+          if (!r.c || !r.c[0] || !r.c[0].v) return;
+          var nome = r.c[0].v.toString().trim();
+          if (!nome) return;
+          var o = document.createElement('option');
+          o.value = nome; o.textContent = nome;
+          sel.appendChild(o);
+        });
+      })
+      .catch(function() {
+        document.getElementById('f-vendedor').innerHTML =
+          '<option value="">Erro ao carregar vendedores</option>';
+      });
+  }
+
+  // ── ENVIO DE SUGESTÃO ──
+  function enviarSugestao() {
+    var vendedor = document.getElementById('f-vendedor').value;
+    var artigo   = document.getElementById('f-artigo').value.trim();
+    var cor      = document.getElementById('f-cor').value.trim();
+    var urgente  = document.getElementById('f-urgente').checked;
+    var valido   = true;
+
+    [['f-vendedor', vendedor], ['f-artigo', artigo], ['f-cor', cor]].forEach(function(p) {
+      var el = document.getElementById(p[0]);
+      if (!p[1]) { el.classList.add('invalid'); valido = false; }
+      else el.classList.remove('invalid');
+    });
+
+    if (!valido) return;
+
+    var btn = document.getElementById('btn-enviar');
+    btn.disabled = true;
+    btn.textContent = 'Enviando...';
+
+    fetch(SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ vendedor: vendedor, artigo: artigo, cor: cor, urgente: urgente })
+    })
+    .then(function() {
+      document.getElementById('success-msg').style.display = 'block';
+      document.getElementById('f-vendedor').value = '';
+      document.getElementById('f-artigo').value = '';
+      document.getElementById('f-cor').value = '';
+      document.getElementById('f-urgente').checked = false;
+      btn.disabled = false;
+      btn.textContent = 'Enviar sugestão';
+      setTimeout(function() {
+        document.getElementById('success-msg').style.display = 'none';
+      }, 5000);
+    })
+    .catch(function() {
+      alert('Erro ao enviar. Verifique sua conexão e tente novamente.');
+      btn.disabled = false;
+      btn.textContent = 'Enviar sugestão';
+    });
+  }
+
+  // ── TABS ──
+  function switchTab(id, el) {
+    document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+    document.querySelectorAll('.pane').forEach(function(p) { p.classList.remove('active'); });
+    el.classList.add('active');
+    document.getElementById('pane-' + id).classList.add('active');
+  }
+
+  // ── INIT ──
+  carregarPedidos();
+  carregarVendedores();
+</script>
+
+</body>
+</html>
