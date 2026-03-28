@@ -164,9 +164,10 @@
       font-size: 11px;
       font-weight: 500;
     }
-    .badge-aguardando { background: #eef2f7; color: #5a7a9a; }
-    .badge-em-aberto  { background: #fef3e2; color: #9a6010; }
-    .badge-entregue   { background: #eaf5ee; color: #2e7a4a; }
+    .badge-pendente    { background: #fef9e2; color: #9a7a00; }
+    .badge-producao    { background: #eaf5ee; color: #2e7a4a; }
+    .badge-atrasado    { background: #fff0f0; color: #c0392b; }
+    .badge-entregue    { background: #f0f0f0; color: #777; }
 
     .empty-msg {
       text-align: center;
@@ -316,8 +317,9 @@
         </select>
         <select id="sel-status" onchange="aplicarFiltros()">
           <option value="">Todos os status</option>
-          <option>Aguardando</option>
-          <option>Em Aberto</option>
+          <option>Pendente</option>
+          <option>Em Produção</option>
+          <option>Atrasado</option>
           <option>Entregue</option>
         </select>
         <button class="btn-clear" onclick="limparFiltros()">Limpar filtros</button>
@@ -473,9 +475,10 @@
         ? '<span class="urgente-dot"></span>Urgente'
         : '—';
 
-      var badgeClass = 'badge-aguardando';
+      var badgeClass = 'badge-pendente';
       var s = r.status.toLowerCase();
-      if (s.includes('aberto')) badgeClass = 'badge-em-aberto';
+      if (s.includes('produ')) badgeClass = 'badge-producao';
+      else if (s.includes('atras')) badgeClass = 'badge-atrasado';
       else if (s.includes('entreg')) badgeClass = 'badge-entregue';
 
       tr.innerHTML =
