@@ -293,6 +293,7 @@
 <div class="header">
   <img src="https://rod-010.github.io/portal-casa-romeu/Logo_Romeu_R_Invertido.png" alt="Casa Romeu" style="height:42px;width:auto;display:block;">
   <div class="tab active" onclick="switchTab('pedidos', this)" style="margin-left:24px;">Pedidos em Aberto</div>
+  <div class="tab" onclick="switchTab('desenvolvimento', this)">Desenvolvimento</div>
   <div class="tab" onclick="switchTab('sugestoes', this)">Sugerir Compra</div>
   <div class="header-updated" id="ultima-atualizacao">Carregando...</div>
 </div>
@@ -339,6 +340,46 @@
         </table>
         <div id="empty-msg" class="empty-msg" style="display:none">
           Nenhum pedido encontrado com esses filtros.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ABA DESENVOLVIMENTO ── -->
+  <div class="pane" id="pane-desenvolvimento">
+    <div id="loading-dev" class="loading">
+      <div class="spinner"></div><br>Carregando desenvolvimento...
+    </div>
+    <div id="erro-dev" class="error-msg" style="display:none">
+      Não foi possível carregar os dados. Verifique se a planilha está compartilhada como pública.
+    </div>
+    <div id="dev-wrap" style="display:none">
+      <div class="filters">
+        <select id="dev-sel-status" onchange="aplicarFiltrosDev()">
+          <option value="">Todos os status</option>
+          <option>Pendente</option>
+          <option>Em Produção</option>
+          <option>Atrasado</option>
+        </select>
+        <button class="btn-clear" onclick="limparFiltrosDev()">Limpar filtros</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Cliente</th>
+              <th>Produto</th>
+              <th>Cor</th>
+              <th>Quant</th>
+              <th>Status</th>
+              <th>Prev. Entrega</th>
+              <th>Observação</th>
+            </tr>
+          </thead>
+          <tbody id="dev-body"></tbody>
+        </table>
+        <div id="dev-empty-msg" class="empty-msg" style="display:none">
+          Nenhum item encontrado com esses filtros.
         </div>
       </div>
     </div>
@@ -609,12 +650,106 @@
     });
   }
 
+  // ── DESENVOLVIMENTO ──
+  var devRows = [];
+
+  function carregarDesenvolvimento() {
+    fetch(sheetURL('Desenvolvimento'))
+      .then(function(r) { return r.text(); })
+      .then(function(raw) {
+        var data = parseSheetJSON(raw);
+        var rows = data.table.rows;
+        var cols = data.table.cols;
+
+        var idx = {};
+        cols.forEach(function(c, i) {
+          if (c.label) idx[c.label.trim()] = i;
+        });
+
+        devRows = [];
+        rows.forEach(function(r) {
+          if (!r.c) return;
+          function val(col) {
+            var i = idx[col];
+            if (i === undefined || !r.c[i]) return '';
+            return r.c[i].f || r.c[i].v || '';
+          }
+          var cliente  = String(val('Cliente')).trim();
+          var produto  = String(val('Produto')).trim();
+          var cor      = String(val('Cor')).trim();
+          var quant    = String(val('Quant')).trim();
+          var status   = String(val('Status')).trim();
+          var entrega  = String(val('Prev.Entrega')).trim();
+          var obs      = String(val('Observação')).trim();
+          if (!cliente && !produto) return;
+          devRows.push({ cliente, produto, cor, quant, status, entrega, obs });
+        });
+
+        renderizarTabelaDev(devRows);
+        document.getElementById('loading-dev').style.display = 'none';
+        document.getElementById('dev-wrap').style.display = 'block';
+      })
+      .catch(function() {
+        document.getElementById('loading-dev').style.display = 'none';
+        document.getElementById('erro-dev').style.display = 'block';
+      });
+  }
+
+  function renderizarTabelaDev(dados) {
+    var tbody = document.getElementById('dev-body');
+    tbody.innerHTML = '';
+    dados.forEach(function(r) {
+      var tr = document.createElement('tr');
+      tr.dataset.status = r.status;
+
+      var badgeClass = 'badge-pendente';
+      var s = r.status.toLowerCase();
+      if (s.includes('produ')) badgeClass = 'badge-producao';
+      else if (s.includes('atras')) badgeClass = 'badge-atrasado';
+      else if (s.includes('entreg')) badgeClass = 'badge-entregue';
+
+      tr.innerHTML =
+        '<td>' + (r.cliente || '—') + '</td>' +
+        '<td>' + (r.produto || '—') + '</td>' +
+        '<td>' + (r.cor || '—') + '</td>' +
+        '<td class="qty">' + (r.quant || '—') + '</td>' +
+        '<td><span class="badge ' + badgeClass + '">' + (r.status || '—') + '</span></td>' +
+        '<td>' + (r.entrega || '—') + '</td>' +
+        '<td style="font-size:12px;color:#666;">' + (r.obs || '—') + '</td>';
+
+      tbody.appendChild(tr);
+    });
+    aplicarFiltrosDev();
+  }
+
+  function aplicarFiltrosDev() {
+    var status = document.getElementById('dev-sel-status').value;
+    var rows = document.querySelectorAll('#dev-body tr');
+    var vis = 0;
+    rows.forEach(function(tr) {
+      var ok = !status || tr.dataset.status === status;
+      tr.classList.toggle('hidden', !ok);
+      if (ok) vis++;
+    });
+    document.getElementById('dev-empty-msg').style.display = vis === 0 ? 'block' : 'none';
+  }
+
+  function limparFiltrosDev() {
+    document.getElementById('dev-sel-status').value = '';
+    aplicarFiltrosDev();
+  }
+
   // ── TABS ──
+  var devCarregado = false;
   function switchTab(id, el) {
     document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
     document.querySelectorAll('.pane').forEach(function(p) { p.classList.remove('active'); });
     el.classList.add('active');
     document.getElementById('pane-' + id).classList.add('active');
+    if (id === 'desenvolvimento' && !devCarregado) {
+      devCarregado = true;
+      carregarDesenvolvimento();
+    }
   }
 
   // ── INIT ──
