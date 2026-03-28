@@ -320,7 +320,6 @@
           <option>Pendente</option>
           <option>Em Produção</option>
           <option>Atrasado</option>
-          <option>Entregue</option>
         </select>
         <button class="btn-clear" onclick="limparFiltros()">Limpar filtros</button>
       </div>
@@ -425,10 +424,12 @@
             if (i === undefined || !r.c[i]) return '';
             return r.c[i].f || r.c[i].v || '';
           }
+          var status_raw = String(val('Status')).trim();
+          if (status_raw.toLowerCase().includes('entreg')) return;
           var artigo   = String(val('Artigo')).trim();
           var cor      = String(val('Cor')).trim();
           var qtde     = String(val('Quantidade')).trim();
-          var status   = String(val('Status')).trim();
+          var status   = status_raw;
           var prior    = String(val('Prioridade')).trim();
           var entrega  = String(val('Previsão de Entrega')).trim();
           if (!artigo && !cor) return;
