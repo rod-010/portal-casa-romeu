@@ -24,31 +24,40 @@
       min-height: 100vh;
     }
 
-    /* ── HEADER + TABS unificados ── */
+    /* ── HEADER ── */
     .header {
       background: var(--azul);
-      padding: 0 24px;
       display: flex;
-      align-items: center;
+      flex-direction: column;
       position: sticky;
       top: 0;
       z-index: 100;
       box-shadow: 0 2px 8px rgba(0,0,0,0.25);
-      height: 70px;
-      gap: 0;
     }
-    .header img { flex-shrink: 0; margin-right: 20px; height: 58px; width: auto; }
+    .header-logo-row {
+      display: flex;
+      align-items: center;
+      padding: 8px 24px;
+      height: 70px;
+    }
+    .header img { flex-shrink: 0; height: 52px; width: auto; }
     .header-updated {
       margin-left: auto;
       color: #ffffff;
       font-size: 14px;
       white-space: nowrap;
     }
+    .header-tabs-row {
+      display: flex;
+      padding: 0 16px;
+      background: var(--azul);
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
     .tab {
-      padding: 0 24px;
-      height: 70px;
-      line-height: 70px;
-      font-size: 16px;
+      padding: 0 20px;
+      height: 44px;
+      line-height: 44px;
+      font-size: 15px;
       color: #ffffff;
       cursor: pointer;
       border-bottom: 3px solid transparent;
@@ -277,30 +286,38 @@
       margin-top: 16px;
     }
 
-    @media (max-width: 600px) {
-      .content { padding: 12px; }
-      .header { padding: 0 12px; height: 56px; }
-      .header img { height: 42px; margin-right: 8px; }
-      .header-updated { font-size: 11px; }
-      .tab { font-size: 13px; padding: 0 12px; height: 56px; line-height: 56px; }
-      .filters { flex-direction: column; gap: 8px; }
-      .filters select { min-width: 100%; }
-      .btn-clear { width: 100%; text-align: center; }
-      .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 8px; }
-      table { min-width: 520px; font-size: 12px; }
+    @media (max-width: 768px) {
+      .content { padding: 10px; }
+      .header-updated { display: none; }
+      .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      table { min-width: 480px; font-size: 12px; }
       thead th { padding: 8px 10px; font-size: 10px; }
       tbody td { padding: 8px 10px; }
+      .filters { flex-direction: column; gap: 8px; }
+      .filters select { width: 100%; }
+      .btn-clear { width: 100%; text-align: center; }
+    }
+    @media (max-width: 600px) {
+      .header { height: auto; flex-direction: column; align-items: stretch; padding: 0; }
+      .header-logo-row { display: flex; align-items: center; padding: 8px 14px; }
+      .header img { height: 30px; margin-right: 0; }
+      .header-tabs-row { display: flex; background: var(--azul); border-top: 1px solid rgba(255,255,255,0.1); overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      .tab { font-size: 12px; padding: 0 14px; height: 40px; line-height: 40px; white-space: nowrap; flex-shrink: 0; }
     }
   </style>
 </head>
 <body>
 
 <div class="header">
-  <img src="https://rod-010.github.io/portal-casa-romeu/Logo_Romeu_R_Invertido.png" alt="Casa Romeu" style="height:42px;width:auto;display:block;">
-  <div class="tab active" onclick="switchTab('pedidos', this)" style="margin-left:24px;">Pedidos em Aberto</div>
-  <div class="tab" onclick="switchTab('desenvolvimento', this)">Desenvolvimento</div>
-  <div class="tab" onclick="switchTab('sugestoes', this)">Sugerir Compra</div>
-  <div class="header-updated" id="ultima-atualizacao">Carregando...</div>
+  <div class="header-logo-row" style="display:flex;align-items:center;width:100%;padding:0 20px;">
+    <img src="https://rod-010.github.io/portal-casa-romeu/Logo_Romeu_R_Invertido.png" alt="Casa Romeu" style="height:58px;width:auto;display:block;">
+    <div class="header-updated" id="ultima-atualizacao" style="margin-left:auto;">Carregando...</div>
+  </div>
+  <div class="header-tabs-row" style="display:flex;width:100%;padding:0 4px;">
+    <div class="tab active" onclick="switchTab('pedidos', this)">Pedidos em Aberto</div>
+    <div class="tab" onclick="switchTab('desenvolvimento', this)">Desenvolvimento</div>
+    <div class="tab" onclick="switchTab('sugestoes', this)">Sugerir Compra</div>
+  </div>
 </div>
 
 <div class="content">
